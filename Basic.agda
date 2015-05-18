@@ -24,7 +24,7 @@ mutual
 
   data _↦_ : Con -> Con -> Set where
     idˢᵘᵇ  : ∀ {Γ}     -> Γ ↦ Γ
-    _∘ˢᵘᵇ_ : ∀ {Γ Δ Σ} -> Γ ↦ Δ -> Δ ↦ Σ -> Γ ↦ Σ
+    _∘ˢᵘᵇ_ : ∀ {Γ Δ Θ} -> Δ ↦ Θ -> Γ ↦ Δ -> Γ ↦ Θ
     _▻ˢᵘᵇ_ : ∀ {Γ Δ σ} -> Γ ↦ Δ -> Δ ⊢ σ -> Γ ▻ σ ↦ Δ
     ↑      : ∀ {Γ σ}   -> Γ ↦ Γ ▻ σ
 
@@ -33,8 +33,16 @@ data _∈_ : Type -> Con -> Set where
   vs : ∀ {Γ σ τ} -> σ ∈ Γ     -> σ ∈ Γ ▻ τ
 
 data _⊢ⁿᵉ[_]_ Γ (B : Con -> Type -> Set) : Type -> Set where
-  varⁿ : ∀ {σ}   -> σ ∈ Γ            -> Γ ⊢ⁿᵉ[ B ] σ
-  _∙ⁿ_ : ∀ {σ τ} -> Γ ⊢ⁿᵉ[ B ] σ ⇒ τ -> B Γ σ        -> Γ ⊢ⁿᵉ[ B ] τ
+  var : ∀ {σ}   -> σ ∈ Γ            -> Γ ⊢ⁿᵉ[ B ] σ
+  _∙_ : ∀ {σ τ} -> Γ ⊢ⁿᵉ[ B ] σ ⇒ τ -> B Γ σ        -> Γ ⊢ⁿᵉ[ B ] τ
+
+mutual
+  data _⊢ⁿᶠ_ Γ : Type -> Set where
+    neⁿᶠ : Γ ⊢ⁿᵉ ⋆ -> Γ ⊢ⁿᶠ ⋆
+    ƛⁿᶠ  : ∀ {σ τ} -> Γ ▻ σ ⊢ⁿᶠ τ -> Γ ⊢ⁿᶠ σ ⇒ τ
+
+  _⊢ⁿᵉ_ : Con -> Type -> Set
+  Γ ⊢ⁿᵉ σ = Γ ⊢ⁿᵉ[ _⊢ⁿᶠ_ ] σ
 
 data Env (B : Con -> Type -> Set) Δ : Con -> Set where
   εᵉⁿᵛ   : Env B Δ ε
@@ -45,19 +53,11 @@ mutual
     neˢᵉᵐ : ∀ {σ}     -> ⟦ Δ ⊢ⁿᵉ σ ⟧ -> ⟦ Δ ⊢ⁿᶠ σ ⟧
     ƛˢᵉᵐ  : ∀ {Γ σ τ} -> Γ ▻ σ ⊢ τ   -> ⟦ Γ ↦ Δ ⟧   -> ⟦ Δ ⊢ⁿᶠ σ ⇒ τ ⟧
 
-  ⟦_↦_⟧ : Con -> Con -> Set
-  ⟦ Γ ↦ Δ ⟧ = Env ⟦_⊢ⁿᶠ_⟧ Δ Γ
-
   ⟦_⊢ⁿᵉ_⟧ : Con -> Type -> Set
   ⟦ Γ ⊢ⁿᵉ σ ⟧ = Γ ⊢ⁿᵉ[ ⟦_⊢ⁿᶠ_⟧ ] σ
 
-mutual
-  data _⊢ⁿᶠ_ Γ : Type -> Set where
-    neⁿ : Γ ⊢ⁿᵉ ⋆ -> Γ ⊢ⁿᶠ ⋆
-    ƛⁿ  : ∀ {σ τ} -> Γ ▻ σ ⊢ⁿᶠ τ -> Γ ⊢ⁿᶠ σ ⇒ τ
-
-  _⊢ⁿᵉ_ : Con -> Type -> Set
-  Γ ⊢ⁿᵉ σ = Γ ⊢ⁿᵉ[ _⊢ⁿᶠ_ ] σ
+  ⟦_↦_⟧ : Con -> Con -> Set
+  ⟦ Γ ↦ Δ ⟧ = Env ⟦_⊢ⁿᶠ_⟧ Δ Γ
 
 data _⊂_ : Con -> Con -> Set where
   stop : ∀ {Γ σ}   -> Γ ⊂ Γ ▻ σ
@@ -69,29 +69,29 @@ embᵛᵃʳ (vs v) = embᵛᵃʳ v [ ↑ ]
 
 ε↦Γ : ∀ {Γ} -> ε ↦ Γ
 ε↦Γ {ε}     = idˢᵘᵇ
-ε↦Γ {Γ ▻ σ} = ε↦Γ ∘ˢᵘᵇ ↑
+ε↦Γ {Γ ▻ σ} = ↑ ∘ˢᵘᵇ ε↦Γ
 
 mutual
   embⁿᵉ : ∀ {Γ σ} -> Γ ⊢ⁿᵉ σ -> Γ ⊢ σ
-  embⁿᵉ (varⁿ v) = embᵛᵃʳ v
-  embⁿᵉ (f ∙ⁿ x) = embⁿᵉ f ∙ embⁿᶠ x
+  embⁿᵉ (var v) = embᵛᵃʳ v
+  embⁿᵉ (f ∙ x) = embⁿᵉ f ∙ embⁿᶠ x
 
   embⁿᶠ : ∀ {Γ σ} -> Γ ⊢ⁿᶠ σ -> Γ ⊢ σ
-  embⁿᶠ (neⁿ n) = embⁿᵉ n
-  embⁿᶠ (ƛⁿ b)  = ƛ (embⁿᶠ b)
+  embⁿᶠ (neⁿᶠ n) = embⁿᵉ n
+  embⁿᶠ (ƛⁿᶠ  b) = ƛ (embⁿᶠ b)
 
 mutual
   emb⟦⟧ⁿᵉ : ∀ {Γ σ} -> ⟦ Γ ⊢ⁿᵉ σ ⟧ -> Γ ⊢ σ
-  emb⟦⟧ⁿᵉ (varⁿ v) = embᵛᵃʳ v
-  emb⟦⟧ⁿᵉ (f ∙ⁿ x) = emb⟦⟧ⁿᵉ f ∙ emb⟦⟧ⁿᶠ x
+  emb⟦⟧ⁿᵉ (var v) = embᵛᵃʳ v
+  emb⟦⟧ⁿᵉ (f ∙ x) = emb⟦⟧ⁿᵉ f ∙ emb⟦⟧ⁿᶠ x
 
   emb⟦⟧ⁿᶠ : ∀ {Γ σ} -> ⟦ Γ ⊢ⁿᶠ σ ⟧ -> Γ ⊢ σ
-  emb⟦⟧ⁿᶠ (neˢᵉᵐ n)  = emb⟦⟧ⁿᵉ n
+  emb⟦⟧ⁿᶠ (neˢᵉᵐ  n) = emb⟦⟧ⁿᵉ n
   emb⟦⟧ⁿᶠ (ƛˢᵉᵐ b ρ) = (ƛ b) [ emb⟦⟧ᵉⁿᵛ ρ ]
 
   emb⟦⟧ᵉⁿᵛ : ∀ {Γ Δ} -> ⟦ Γ ↦ Δ ⟧ -> Γ ↦ Δ
-  emb⟦⟧ᵉⁿᵛ  εᵉⁿᵛ      = ε↦Γ
-  emb⟦⟧ᵉⁿᵛ (ρ ▻ᵉⁿᵛ s) = emb⟦⟧ᵉⁿᵛ ρ ▻ˢᵘᵇ emb⟦⟧ⁿᶠ s
+  emb⟦⟧ᵉⁿᵛ  εᵉⁿᵛ       = ε↦Γ
+  emb⟦⟧ᵉⁿᵛ (ρ ▻ᵉⁿᵛ xˢ) = emb⟦⟧ᵉⁿᵛ ρ ▻ˢᵘᵇ emb⟦⟧ⁿᶠ xˢ
 
 wkᵛᵃʳ : ∀ {Γ Δ σ} -> Γ ⊂ Δ -> σ ∈ Γ -> σ ∈ Δ
 wkᵛᵃʳ  stop       v     = vs v
@@ -100,29 +100,32 @@ wkᵛᵃʳ (keep sub) (vs v) = vs (wkᵛᵃʳ sub v)
 
 mutual
   wk⟦⟧ⁿᵉ : ∀ {Γ Δ σ} -> Γ ⊂ Δ -> ⟦ Γ ⊢ⁿᵉ σ ⟧ -> ⟦ Δ ⊢ⁿᵉ σ ⟧
-  wk⟦⟧ⁿᵉ sub (varⁿ v) = varⁿ (wkᵛᵃʳ sub v)
-  wk⟦⟧ⁿᵉ sub (f ∙ⁿ x) = wk⟦⟧ⁿᵉ sub f ∙ⁿ wk⟦⟧ⁿᶠ sub x
+  wk⟦⟧ⁿᵉ sub (var v) = var (wkᵛᵃʳ sub v)
+  wk⟦⟧ⁿᵉ sub (f ∙ x) = wk⟦⟧ⁿᵉ sub f ∙ wk⟦⟧ⁿᶠ sub x
 
   wk⟦⟧ⁿᶠ : ∀ {Γ Δ σ} -> Γ ⊂ Δ -> ⟦ Γ ⊢ⁿᶠ σ ⟧ -> ⟦ Δ ⊢ⁿᶠ σ ⟧
   wk⟦⟧ⁿᶠ sub (neˢᵉᵐ n)  = neˢᵉᵐ (wk⟦⟧ⁿᵉ sub n)
   wk⟦⟧ⁿᶠ sub (ƛˢᵉᵐ b ρ) = ƛˢᵉᵐ b (wk⟦⟧ᵉⁿᵛ sub ρ)
 
-  wk⟦⟧ᵉⁿᵛ : ∀ {Γ Δ Σ} -> Δ ⊂ Σ -> ⟦ Γ ↦ Δ ⟧ -> ⟦ Γ ↦ Σ ⟧
-  wk⟦⟧ᵉⁿᵛ sub  εᵉⁿᵛ      = εᵉⁿᵛ
-  wk⟦⟧ᵉⁿᵛ sub (ρ ▻ᵉⁿᵛ s) = wk⟦⟧ᵉⁿᵛ sub ρ ▻ᵉⁿᵛ wk⟦⟧ⁿᶠ sub s
+  wk⟦⟧ᵉⁿᵛ : ∀ {Γ Δ Θ} -> Δ ⊂ Θ -> ⟦ Γ ↦ Δ ⟧ -> ⟦ Γ ↦ Θ ⟧
+  wk⟦⟧ᵉⁿᵛ sub  εᵉⁿᵛ       = εᵉⁿᵛ
+  wk⟦⟧ᵉⁿᵛ sub (ρ ▻ᵉⁿᵛ xˢ) = wk⟦⟧ᵉⁿᵛ sub ρ ▻ᵉⁿᵛ wk⟦⟧ⁿᶠ sub xˢ
 
 mutual
   wkⁿᵉ : ∀ {Γ Δ σ} -> Γ ⊂ Δ -> Γ ⊢ⁿᵉ σ -> Δ ⊢ⁿᵉ σ
-  wkⁿᵉ sub (varⁿ v) = varⁿ (wkᵛᵃʳ sub v)
-  wkⁿᵉ sub (f ∙ⁿ x) = wkⁿᵉ sub f ∙ⁿ wkⁿᶠ sub x
+  wkⁿᵉ sub (var v) = var (wkᵛᵃʳ sub v)
+  wkⁿᵉ sub (f ∙ x) = wkⁿᵉ sub f ∙ wkⁿᶠ sub x
 
   wkⁿᶠ : ∀ {Γ Δ σ} -> Γ ⊂ Δ -> Γ ⊢ⁿᶠ σ -> Δ ⊢ⁿᶠ σ
-  wkⁿᶠ sub (neⁿ n) = neⁿ (wkⁿᵉ sub n)
-  wkⁿᶠ sub (ƛⁿ  b) = ƛⁿ (wkⁿᶠ (keep sub) b)
+  wkⁿᶠ sub (neⁿᶠ n) = neⁿᶠ (wkⁿᵉ sub n)
+  wkⁿᶠ sub (ƛⁿᶠ  b) = ƛⁿᶠ (wkⁿᶠ (keep sub) b)
 
-_[_]⁰ : ∀ {Γ σ τ} -> Γ ▻ σ ⊢ τ -> Γ ⊢ σ -> Γ ⊢ τ
-b [ x ]⁰ = b [ idˢᵘᵇ ▻ˢᵘᵇ x ]
+pop⟦⟧ⁿᶠ : ∀ {Γ σ τ} -> ⟦ Γ ⊢ⁿᶠ τ ⟧ -> ⟦ Γ ▻ σ ⊢ⁿᶠ τ ⟧
+pop⟦⟧ⁿᶠ = wk⟦⟧ⁿᶠ stop
 
 idᵉⁿᵛ : ∀ {Γ} -> ⟦ Γ ↦ Γ ⟧
 idᵉⁿᵛ {ε}     = εᵉⁿᵛ
-idᵉⁿᵛ {Γ ▻ σ} = (wk⟦⟧ᵉⁿᵛ stop idᵉⁿᵛ) ▻ᵉⁿᵛ neˢᵉᵐ (varⁿ vz)
+idᵉⁿᵛ {Γ ▻ σ} = (wk⟦⟧ᵉⁿᵛ stop idᵉⁿᵛ) ▻ᵉⁿᵛ neˢᵉᵐ (var vz)
+
+_[_]⁰ : ∀ {Γ σ τ} -> Γ ▻ σ ⊢ τ -> Γ ⊢ σ -> Γ ⊢ τ
+b [ x ]⁰ = b [ idˢᵘᵇ ▻ˢᵘᵇ x ]
