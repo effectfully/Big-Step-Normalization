@@ -6,6 +6,16 @@ open import Basic
 open import BigStep
 open import SCV
 
+∘idᵒᵖᵉ : ∀ {Γ Δ} {ι : Γ ⊆ Δ} -> ι ∘ᵒᵖᵉ idᵒᵖᵉ ≡ ι
+∘idᵒᵖᵉ {ι = stop}   = refl
+∘idᵒᵖᵉ {ι = skip ι} = cong skip ∘idᵒᵖᵉ
+∘idᵒᵖᵉ {ι = keep ι} = cong keep ∘idᵒᵖᵉ
+
+id∘ᵒᵖᵉ : ∀ {Γ Δ} {ι : Γ ⊆ Δ} -> idᵒᵖᵉ ∘ᵒᵖᵉ ι ≡ ι
+id∘ᵒᵖᵉ {ι = stop}   = refl
+id∘ᵒᵖᵉ {ι = skip ι} = cong skip id∘ᵒᵖᵉ
+id∘ᵒᵖᵉ {ι = keep ι} = cong keep id∘ᵒᵖᵉ
+
 wk⟦⟧ᵛᵃʳ-∘ᵒᵖᵉ : ∀ {Γ Δ Θ σ} (κ : Δ ⊆ Θ) (ι : Γ ⊆ Δ) (v : σ ∈ Γ)
              -> wkᵛᵃʳ (κ ∘ᵒᵖᵉ ι) v ≡ wkᵛᵃʳ κ (wkᵛᵃʳ ι v)
 wk⟦⟧ᵛᵃʳ-∘ᵒᵖᵉ  stop     stop     ()
@@ -30,10 +40,25 @@ mutual
   wk⟦⟧ᵉⁿᵛ-∘ᵒᵖᵉ {ρ =  εᵉⁿᵛ    } = refl
   wk⟦⟧ᵉⁿᵛ-∘ᵒᵖᵉ {ρ = ρ ▻ᵉⁿᵛ xˢ} = cong₂ _▻ᵉⁿᵛ_ wk⟦⟧ᵉⁿᵛ-∘ᵒᵖᵉ wk⟦⟧ⁿᶠ-∘ᵒᵖᵉ
 
-wk-$⇓ : ∀ {Γ Δ σ τ} {ι : Γ ⊆ Δ} {fˢ : ⟦ Γ ⊢ⁿᶠ σ ⇒ τ ⟧} {xˢ : ⟦ Γ ⊢ⁿᶠ σ ⟧} {yˢ : ⟦ Γ ⊢ⁿᶠ τ ⟧}
-      -> fˢ $ xˢ ⇓ yˢ -> wk⟦⟧ⁿᶠ ι fˢ $ wk⟦⟧ⁿᶠ ι xˢ ⇓ wk⟦⟧ⁿᶠ ι yˢ 
-wk-$⇓  ne$⇓    = ne$⇓
-wk-$⇓ (ƛ$⇓ qb) = ƛ$⇓ {!!}
+mutual
+  wk-⟦⟧⇓ : ∀ {Γ Δ Θ σ} {ι : Δ ⊆ Θ} {x : Γ ⊢ σ} {xˢʳ : ⟦ Δ ⊢ⁿᶠ σ ⟧} {ρ : ⟦ Γ ↦ Δ ⟧}
+         -> ⟦ x ⟧ ρ ⇓ xˢʳ -> ⟦ x ⟧ wk⟦⟧ᵉⁿᵛ ι ρ ⇓ wk⟦⟧ⁿᶠ ι xˢʳ
+  wk-⟦⟧⇓  ø⇓              = ø⇓
+  wk-⟦⟧⇓  ƛ⇓_             = ƛ⇓_
+  wk-⟦⟧⇓ (ef ∙⟨ ey ⟩⇓ ex) = wk-⟦⟧⇓ ef ∙⟨ wk-$⇓ ey ⟩⇓ wk-⟦⟧⇓ ex
+  wk-⟦⟧⇓ (eb [ eψ ]⇓)     = wk-⟦⟧⇓ eb [ wk-⟦⟧ˢᵘᵇ⇓ eψ ]⇓
+
+  wk-⟦⟧ˢᵘᵇ⇓ : ∀ {Γ Δ Θ Ξ} {ι : Θ ⊆ Ξ} {ψ : Γ ↦ Δ} {ρ : ⟦ Δ ↦ Θ ⟧} {ρʳ : ⟦ Γ ↦ Θ ⟧}
+            -> ⟦ ψ ⟧ˢᵘᵇ ρ ⇓ ρʳ -> ⟦ ψ ⟧ˢᵘᵇ wk⟦⟧ᵉⁿᵛ ι ρ ⇓ wk⟦⟧ᵉⁿᵛ ι ρʳ
+  wk-⟦⟧ˢᵘᵇ⇓  idˢᵘᵇ⇓       = idˢᵘᵇ⇓
+  wk-⟦⟧ˢᵘᵇ⇓  ↑⇓           = ↑⇓
+  wk-⟦⟧ˢᵘᵇ⇓ (eψ ▻ˢᵘᵇ⇓ ex) = wk-⟦⟧ˢᵘᵇ⇓ eψ ▻ˢᵘᵇ⇓ wk-⟦⟧⇓ ex
+  wk-⟦⟧ˢᵘᵇ⇓ (eψ ∘ˢᵘᵇ⇓ eφ) = wk-⟦⟧ˢᵘᵇ⇓ eψ ∘ˢᵘᵇ⇓ wk-⟦⟧ˢᵘᵇ⇓ eφ
+
+  wk-$⇓ : ∀ {Γ Δ σ τ} {ι : Γ ⊆ Δ} {fˢ : ⟦ Γ ⊢ⁿᶠ σ ⇒ τ ⟧} {xˢ : ⟦ Γ ⊢ⁿᶠ σ ⟧} {yˢ : ⟦ Γ ⊢ⁿᶠ τ ⟧}
+        -> fˢ $ xˢ ⇓ yˢ -> wk⟦⟧ⁿᶠ ι fˢ $ wk⟦⟧ⁿᶠ ι xˢ ⇓ wk⟦⟧ⁿᶠ ι yˢ 
+  wk-$⇓  ne$⇓    = ne$⇓
+  wk-$⇓ (ƛ$⇓ ab) = ƛ$⇓ (wk-⟦⟧⇓ ab)
 
 mutual
   wk-Quoteⁿᵉ : ∀ {Γ Δ σ} {ι : Γ ⊆ Δ} {xˢ : ⟦ Γ ⊢ⁿᵉ σ ⟧} {xʳ : Γ ⊢ⁿᵉ σ}
@@ -44,9 +69,11 @@ mutual
   wk-Quoteⁿᶠ : ∀ {Γ Δ σ} {ι : Γ ⊆ Δ} {xˢ : ⟦ Γ ⊢ⁿᶠ σ ⟧} {xʳ : Γ ⊢ⁿᶠ σ}
              -> Quoteⁿᶠ xˢ ⇓ xʳ -> Quoteⁿᶠ wk⟦⟧ⁿᶠ ι xˢ ⇓ wkⁿᶠ ι xʳ
   wk-Quoteⁿᶠ              (ne⇓ qx)    = ne⇓ (wk-Quoteⁿᵉ qx)
-  wk-Quoteⁿᶠ {ι = ι} {xˢ} (ƛ⇓_ qy qb) = ƛ⇓_ (coerce qy) (wk-Quoteⁿᶠ qb) where
-    proof  = trans (sym wk⟦⟧ⁿᶠ-∘ᵒᵖᵉ) (trans (cong (λ ι -> wk⟦⟧ⁿᶠ (skip ι) _) {!!}) wk⟦⟧ⁿᶠ-∘ᵒᵖᵉ)
-    coerce = subst (_$ _ ⇓ _) proof ∘ wk-$⇓
+  wk-Quoteⁿᶠ {ι = ι} {xˢ} (ƛ⇓_ qy qb) = ƛ⇓_ (coerce (wk-$⇓ qy)) (wk-Quoteⁿᶠ qb) where
+    coerce = subst (_$ _ ⇓ _)
+               (trans (sym wk⟦⟧ⁿᶠ-∘ᵒᵖᵉ)
+                  (trans (cong (λ ι -> wk⟦⟧ⁿᶠ (skip ι) _)
+                     (trans ∘idᵒᵖᵉ (sym id∘ᵒᵖᵉ))) wk⟦⟧ⁿᶠ-∘ᵒᵖᵉ))
     
 wkˢᶜᵛ : ∀ {Γ Δ σ} {xˢ : ⟦ Γ ⊢ⁿᶠ σ ⟧}
       -> (ι : Γ ⊆ Δ) -> SCV xˢ -> SCV (wk⟦⟧ⁿᶠ ι xˢ)
