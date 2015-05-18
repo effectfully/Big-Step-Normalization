@@ -58,7 +58,7 @@ mutual
   wk-$⇓ : ∀ {Γ Δ σ τ} {ι : Γ ⊆ Δ} {fˢ : ⟦ Γ ⊢ⁿᶠ σ ⇒ τ ⟧} {xˢ : ⟦ Γ ⊢ⁿᶠ σ ⟧} {yˢ : ⟦ Γ ⊢ⁿᶠ τ ⟧}
         -> fˢ $ xˢ ⇓ yˢ -> wk⟦⟧ⁿᶠ ι fˢ $ wk⟦⟧ⁿᶠ ι xˢ ⇓ wk⟦⟧ⁿᶠ ι yˢ 
   wk-$⇓  ne$⇓    = ne$⇓
-  wk-$⇓ (ƛ$⇓ ab) = ƛ$⇓ (wk-⟦⟧⇓ ab)
+  wk-$⇓ (ƛ$⇓ eb) = ƛ$⇓ (wk-⟦⟧⇓ eb)
 
 mutual
   wk-Quoteⁿᵉ : ∀ {Γ Δ σ} {ι : Γ ⊆ Δ} {xˢ : ⟦ Γ ⊢ⁿᵉ σ ⟧} {xʳ : Γ ⊢ⁿᵉ σ}
@@ -75,10 +75,39 @@ mutual
                   (trans (cong (λ ι -> wk⟦⟧ⁿᶠ (skip ι) _)
                      (trans ∘idᵒᵖᵉ (sym id∘ᵒᵖᵉ))) wk⟦⟧ⁿᶠ-∘ᵒᵖᵉ))
     
-wkˢᶜᵛ : ∀ {Γ Δ σ} {xˢ : ⟦ Γ ⊢ⁿᶠ σ ⟧}
-      -> (ι : Γ ⊆ Δ) -> SCV xˢ -> SCV (wk⟦⟧ⁿᶠ ι xˢ)
-wkˢᶜᵛ {σ = ⋆}     {neˢᵉᵐ xˢ} ι (x , qx) = wkⁿᵉ ι x , wk-Quoteⁿᵉ qx
-wkˢᶜᵛ {σ = σ ⇒ τ}            ι  r       = λ κ xˢᶜᵛ ->
-  case r (κ ∘ᵒᵖᵉ ι) xˢᶜᵛ of λ{
+wkˢᶜᵛ : ∀ {Γ Δ σ} {xˢ : ⟦ Γ ⊢ⁿᶠ σ ⟧} {ι : Γ ⊆ Δ}
+      -> SCV xˢ -> SCV (wk⟦⟧ⁿᶠ ι xˢ)
+wkˢᶜᵛ {σ = ⋆}     {neˢᵉᵐ xˢ} (x , qx) = wkⁿᵉ _ x , wk-Quoteⁿᵉ qx
+wkˢᶜᵛ {σ = σ ⇒ τ}             r       = λ κ xˢᶜᵛ ->
+  case r (κ ∘ᵒᵖᵉ _) xˢᶜᵛ of λ{
     (yˢ , yʳ , yˢᶜᵛ) -> yˢ , subst (_$ _ ⇓ yˢ) wk⟦⟧ⁿᶠ-∘ᵒᵖᵉ yʳ , yˢᶜᵛ
   }
+
+wkˢᶜᵉ : ∀ {Γ Δ Θ} {ι : Δ ⊆ Θ} {ρ : ⟦ Γ ↦ Δ ⟧} -> SCE ρ -> SCE (wk⟦⟧ᵉⁿᵛ ι ρ)
+wkˢᶜᵉ  εˢᶜᵉ         = εˢᶜᵉ
+wkˢᶜᵉ (ρ ▻ˢᶜᵉ xˢᶜᵛ) = wkˢᶜᵉ ρ ▻ˢᶜᵉ wkˢᶜᵛ xˢᶜᵛ
+
+mutual
+  quoteˢᶜᵛ : ∀ {Γ σ} {xˢ : ⟦ Γ ⊢ⁿᶠ σ ⟧}
+           -> SCV xˢ -> ∃ λ (xʳ : Γ ⊢ⁿᶠ σ) -> Quoteⁿᶠ xˢ ⇓ xʳ
+  quoteˢᶜᵛ {σ = ⋆}     {neˢᵉᵐ xˢ} (x , qx) = neⁿᶠ x , ne⇓ qx
+  quoteˢᶜᵛ {σ = σ ⇒ τ}             r       =
+    case r topᵒᵖᵉ (unquoteˢᶜᵛ var⇓) of λ{
+      (bˢ̂ʳ , ay , bˢᶜᵛ) -> case quoteˢᶜᵛ bˢᶜᵛ of λ{
+        (b , qb) -> (ƛⁿᶠ b) , ƛ⇓_ ay qb
+      }
+    }
+
+  unquoteˢᶜᵛ : ∀ {Γ σ} {xˢ : ⟦ Γ ⊢ⁿᵉ σ ⟧} {xʳ}
+             -> Quoteⁿᵉ xˢ ⇓ xʳ -> SCV (neˢᵉᵐ xˢ)
+  unquoteˢᶜᵛ {σ = ⋆}     qx = _ , qx
+  unquoteˢᶜᵛ {σ = σ ⇒ τ} qf = λ ι xˢᶜᵛ -> case quoteˢᶜᵛ xˢᶜᵛ of λ{
+      (x , qx) -> _ , ne$⇓ , unquoteˢᶜᵛ (wk-Quoteⁿᵉ qf ∙⇓ qx)
+    }
+
+varˢᶜᵛ : ∀ {Γ σ} -> (v : σ ∈ Γ) -> SCV (varˢᵉᵐ v)
+varˢᶜᵛ v = unquoteˢᶜᵛ var⇓
+
+idˢᶜᵉ : ∀ {Γ} -> SCE (idᵉⁿᵛ {Γ})
+idˢᶜᵉ {ε}     = εˢᶜᵉ
+idˢᶜᵉ {Γ ▻ σ} = wkˢᶜᵉ idˢᶜᵉ ▻ˢᶜᵉ varˢᶜᵛ vz
