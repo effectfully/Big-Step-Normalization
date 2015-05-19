@@ -57,5 +57,15 @@ norm (norm⇓ _ qx) = quoteⁿᶠ qx
 nf : ∀ {Γ σ} -> Γ ⊢ σ -> Γ ⊢ⁿᶠ σ
 nf = ¡ ∘ norm ∘ proj₂ ∘ ∃-Norm
 
--- stabilityⁿᶠ : ∀ {Γ σ} -> (x : Γ ⊢ⁿᶠ σ) -> nf (embⁿᶠ x) ≡ x
--- stabilityⁿᶠ x = {!!}
+stabilityᵛᵃʳ : ∀ {Γ} -> (v : ⋆ ∈ Γ) -> nf (embᵛᵃʳ v) ≡ neⁿᶠ (var v)
+stabilityᵛᵃʳ  vz    = refl
+stabilityᵛᵃʳ (vs v) = {!!}
+
+mutual
+  stabilityⁿᶠ : ∀ {Γ σ} -> (x : Γ ⊢ⁿᶠ σ) -> nf (embⁿᶠ x) ≡ x
+  stabilityⁿᶠ (neⁿᶠ x) = stabilityⁿᵉ x
+  stabilityⁿᶠ (ƛⁿᶠ  b) = {!!}
+
+  stabilityⁿᵉ : ∀ {Γ} -> (x : Γ ⊢ⁿᵉ ⋆) -> nf (embⁿᵉ x) ≡ neⁿᶠ x
+  stabilityⁿᵉ (var v) = stabilityᵛᵃʳ v
+  stabilityⁿᵉ (f ∙ x) = {!!}
