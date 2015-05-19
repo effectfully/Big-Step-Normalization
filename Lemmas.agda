@@ -115,3 +115,11 @@ mutual
         (d , ed , dˢᶜᵉ) -> d , (eq ∘ˢᵘᵇ⇓ ed) , dˢᶜᵉ
       }
     }
+
+∃-Norm : ∀ {Γ σ} -> (x : Γ ⊢ σ) -> ∃ λ xʳ -> Norm x ⇓ xʳ 
+∃-Norm x =
+  case ⟦ x ⟧& idˢᶜᵉ of λ{
+    (xˢʳ , ex , xˢᶜᵛ) -> case quoteˢᶜᵛ xˢᶜᵛ of λ{
+      (xʳ , qx) -> xʳ , norm⇓ ex qx
+    }
+  }

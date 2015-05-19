@@ -34,7 +34,7 @@ mutual
     ne⇓ : ∀ {Γ} {xˢ : ⟦ Γ ⊢ⁿᵉ ⋆ ⟧} {xʳ}
         -> Quoteⁿᵉ xˢ ⇓ xʳ -> Quoteⁿᶠ (neˢᵉᵐ xˢ) ⇓ neⁿᶠ xʳ
     ƛ⇓_ : ∀ {Γ σ τ} {fˢ : ⟦ Γ ⊢ⁿᶠ σ ⇒ τ ⟧} {bˢʳ bʳʳ}
-        -> pop⟦⟧ⁿᶠ fˢ $ varˢᵉᵐ vz ⇓ bˢʳ -> Quoteⁿᶠ bˢʳ ⇓ bʳʳ -> Quoteⁿᶠ fˢ ⇓ ƛⁿᶠ bʳʳ
+        -> pop⟦⟧ⁿᶠ fˢ $ varˢᵉᵐ vz ⇓ bˢʳ -> Quoteⁿᶠ bˢʳ ⇓ bʳʳ -> Quoteⁿᶠ fˢ ⇓ ƛⁿᶠ_ bʳʳ
 
   data Quoteⁿᵉ_⇓_ : ∀ {Γ σ} -> ⟦ Γ ⊢ⁿᵉ σ ⟧ -> Γ ⊢ⁿᵉ σ -> Set where
     var⇓ : ∀ {Γ σ} {v : σ ∈ Γ}
