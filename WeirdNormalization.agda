@@ -44,8 +44,8 @@ _<*>_ = _
 
 mutual
   quoteⁿᶠ : ∀ {Γ σ} {xˢ : ⟦ Γ ⊢ⁿᶠ σ ⟧} {xʳ} -> Quoteⁿᶠ xˢ ⇓ xʳ -> Is xʳ
-  quoteⁿᶠ {xˢ = neˢᵉᵐ _} (ne⇓ qx)    = neⁿᶠ <$> quoteⁿᵉ qx
-  quoteⁿᶠ                (ƛ⇓_ ax qx) = ƛⁿᶠ_ <$> quoteⁿᶠ qx
+  quoteⁿᶠ {σ = ⋆}     (ne⇓ qx)    = neⁿᶠ <$> quoteⁿᵉ qx
+  quoteⁿᶠ {σ = _ ⇒ _} (ƛ⇓_ ax qx) = ƛⁿᶠ_ <$> quoteⁿᶠ qx
 
   quoteⁿᵉ : ∀ {Γ σ} {xˢ : ⟦ Γ ⊢ⁿᵉ σ ⟧} {xʳ} -> Quoteⁿᵉ xˢ ⇓ xʳ -> Is xʳ
   quoteⁿᵉ {xˢ = var _}  var⇓      = _
