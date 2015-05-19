@@ -3,8 +3,8 @@ infixl 4 :$
 data Type = Base | Arrow Type Type
 data Term = Var Int | Lam Term | Term :$ Term deriving Show
 data Ne a = NVar Int | NApp (Ne a) a
-data Nf   = NLam Nf | NNe (Ne Nf)
-data Val  = VLam (Val -> Val) | VNe (Ne Val)
+data Nf   = NNe (Ne Nf)  | NLam Nf
+data Val  = VNe (Ne Val) | VLam (Val -> Val)
 type Con  = [Val]
 
 app :: Val -> Val -> Val
@@ -17,8 +17,8 @@ eval rho (Lam b)  = VLam (\x -> eval (x : rho) b)
 eval rho (f :$ x) = app (eval rho f) (eval rho x)
 
 quoteVal :: Int -> Val -> Nf
-quoteVal i (VLam f) = NLam (quoteVal (i + 1) (f (VNe (NVar i))))
 quoteVal i (VNe  x) = NNe (quoteNe i x)
+quoteVal i (VLam f) = NLam (quoteVal (i + 1) (f (VNe (NVar i))))
 
 quoteNe :: Int -> Ne Val -> Ne Nf
 quoteNe i (NVar j)   = NVar (i - j - 1)
