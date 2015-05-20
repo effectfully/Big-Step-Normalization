@@ -1,5 +1,5 @@
 open import Function hiding (_$_)
-open import Relation.Binary.PropositionalEquality
+open import Relation.Binary.PropositionalEquality hiding ([_])
 open import Data.Product
 
 open import Basic
@@ -95,53 +95,60 @@ mutual
         , ≈-refl
     }
 
--- varˢᶜᵛ : ∀ {Γ σ} -> (v : σ ∈ Γ) -> SCV (varˢᵉᵐ v)
--- varˢᶜᵛ v = unquoteˢᶜᵛ var⇓
+varˢᶜᵛ : ∀ {Γ σ} -> (v : σ ∈ Γ) -> SCV (varˢᵉᵐ v)
+varˢᶜᵛ v = unquoteˢᶜᵛ var⇓ ≈-refl
 
--- idˢᶜᵉ : ∀ {Γ} -> SCE (idᵉⁿᵛ {Γ})
--- idˢᶜᵉ {ε}     = εˢᶜᵉ
--- idˢᶜᵉ {Γ ▻ σ} = wkˢᶜᵉ idˢᶜᵉ ▻ˢᶜᵉ varˢᶜᵛ vz
+idˢᶜᵉ : ∀ {Γ} -> SCE (idᵉⁿᵛ {Γ})
+idˢᶜᵉ {ε}     = εˢᶜᵉ
+idˢᶜᵉ {Γ ▻ σ} = wkˢᶜᵉ idˢᶜᵉ ▻ˢᶜᵉ varˢᶜᵛ vz
 
--- mutual
---   ⟦_⟧& : ∀ {Γ Δ σ} {ρ : ⟦ Γ ↦ Δ ⟧} -> (x : Γ ⊢ σ) -> SCE ρ ->
---     ∃ λ (xˢ : ⟦ Δ ⊢ⁿᶠ σ ⟧) -> ⟦ x ⟧ ρ ⇓ xˢ × SCV xˢ
---   ⟦_⟧& {ρ = ρ ▻ᵉⁿᵛ _} ø (ρˢᶜᵉ ▻ˢᶜᵉ xˢᶜᵛ) = _ , ø⇓ , xˢᶜᵛ
---   ⟦ ƛ b     ⟧& ρˢᶜᵉ = _ , ƛ⇓_ , λ ι xˢᶜᵛ ->
---     case ⟦ b ⟧& (wkˢᶜᵉ ρˢᶜᵉ ▻ˢᶜᵉ xˢᶜᵛ) of λ{
---       (yˢ , eb , yˢᶜᵛ) -> yˢ , (ƛ$⇓ eb) , yˢᶜᵛ , {!!}
---     }
---   ⟦ f ∙ x   ⟧& ρˢᶜᵉ =
---     case ⟦ f ⟧& ρˢᶜᵉ , ⟦ x ⟧& ρˢᶜᵉ of λ{
---       ((fˢ , ef , r) , (xˢ , ex , xˢᶜᵛ)) -> case r idᵒᵖᵉ xˢᶜᵛ of λ{
---         (yˢ , ey , yˢᶜᵛ , eq) -> yˢ , (ef ∙⟨ subst (_$ _ ⇓ _) wk⟦⟧ⁿᶠ-idᵒᵖᵉ ey ⟩⇓ ex) , yˢᶜᵛ
---       }
---     }
---   ⟦ x [ ψ ] ⟧& ρˢᶜᵉ =
---     case ⟦ ψ ⟧ˢᵘᵇ& ρˢᶜᵉ of λ{
---       (q , eq , qˢᶜᵉ) -> case ⟦ x ⟧& qˢᶜᵉ of λ{
---         (xˢ , ex , xˢᶜᵛ) -> xˢ , (ex [ eq ]⇓) , xˢᶜᵛ
---       }
---     }
+mutual
+  ⟦_⟧& : ∀ {Γ Δ σ} {ρ : ⟦ Γ ↦ Δ ⟧} -> (x : Γ ⊢ σ) -> SCE ρ ->
+    ∃ λ (xˢ : ⟦ Δ ⊢ⁿᶠ σ ⟧) -> ⟦ x ⟧ ρ ⇓ xˢ × SCV xˢ × x [ emb⟦⟧ᵉⁿᵛ ρ ] ≈ emb⟦⟧ⁿᶠ xˢ
+  ⟦_⟧& {ρ = ρ ▻ᵉⁿᵛ _} ø (ρˢᶜᵉ ▻ˢᶜᵉ xˢᶜᵛ) = _ , ø⇓ , xˢᶜᵛ , ≈ø
+  ⟦ ƛ b     ⟧& ρˢᶜᵉ = _ , ƛ⇓_ , (λ ι xˢᶜᵛ ->
+    case ⟦ b ⟧& (wkˢᶜᵉ ρˢᶜᵉ ▻ˢᶜᵉ xˢᶜᵛ) of λ{
+      (yˢ , eb , yˢᶜᵛ , eq₁) -> yˢ , (ƛ$⇓ eb) , yˢᶜᵛ , ≈-trans ≈βσ eq₁
+    }) , ≈-refl
+  ⟦ f ∙ x   ⟧& ρˢᶜᵉ =
+    case ⟦ f ⟧& ρˢᶜᵉ , ⟦ x ⟧& ρˢᶜᵉ of λ{
+      ((fˢ , ef , r , eq₁) , (xˢ , ex , xˢᶜᵛ , eq₂)) -> case r idᵒᵖᵉ xˢᶜᵛ of λ{
+        (yˢ , ey , yˢᶜᵛ , eq₃) -> yˢ , (ef ∙⟨ subst (_$ _ ⇓ _) wk⟦⟧ⁿᶠ-idᵒᵖᵉ ey ⟩⇓ ex) , yˢᶜᵛ
+          , ≈-trans (subst (λ s -> _ ≈ emb⟦⟧ⁿᶠ s ∙ _) (sym (wk⟦⟧ⁿᶠ-idᵒᵖᵉ {xˢ = fˢ}))
+                       (≈-trans ≈∙[] (≈∙-cong eq₁ eq₂))) eq₃
+      }
+    }
+  ⟦ x [ ψ ] ⟧& ρˢᶜᵉ =
+    case ⟦ ψ ⟧ˢᵘᵇ& ρˢᶜᵉ of λ{
+      (q , eq , qˢᶜᵉ , eq₁) -> case ⟦ x ⟧& qˢᶜᵉ of λ{
+        (xˢ , ex , xˢᶜᵛ , eq₂) -> xˢ , (ex [ eq ]⇓) , xˢᶜᵛ
+          , ≈-trans (≈-trans (≈-sym ≈[]∘) (≈[]-cong ≈-refl eq₁)) eq₂
+      }
+    }
 
---   ⟦_⟧ˢᵘᵇ& : ∀ {Γ Δ Θ} {ρ : ⟦ Δ ↦ Θ ⟧} -> (ψ : Γ ↦ Δ) -> SCE ρ ->
---     ∃ λ (ρˢ : ⟦ Γ ↦ Θ ⟧) -> ⟦ ψ ⟧ˢᵘᵇ ρ ⇓ ρˢ × SCE ρˢ
---   ⟦ idˢᵘᵇ    ⟧ˢᵘᵇ& ρˢᶜᵉ = _ , idˢᵘᵇ⇓ , ρˢᶜᵉ
---   ⟦_⟧ˢᵘᵇ& {ρ = ρ ▻ᵉⁿᵛ _} ↑ (ρˢᶜᵉ ▻ˢᶜᵉ xˢᶜᵛ) = ρ , ↑⇓ , ρˢᶜᵉ
---   ⟦ ψ ▻ˢᵘᵇ x ⟧ˢᵘᵇ& ρˢᶜᵉ =
---     case ⟦ ψ ⟧ˢᵘᵇ& ρˢᶜᵉ , ⟦ x ⟧& ρˢᶜᵉ of λ{
---       ((q , eq , qˢᶜᵉ) , (xˢ , ex , xˢᶜᵛ)) -> (q ▻ᵉⁿᵛ xˢ) , (eq ▻ˢᵘᵇ⇓ ex) , (qˢᶜᵉ ▻ˢᶜᵉ xˢᶜᵛ)
---     }
---   ⟦ φ ∘ˢᵘᵇ ψ ⟧ˢᵘᵇ& ρˢᶜᵉ =
---     case ⟦ φ ⟧ˢᵘᵇ& ρˢᶜᵉ of λ{
---       (q , eq , qˢᶜᵉ) -> case ⟦ ψ ⟧ˢᵘᵇ& qˢᶜᵉ of λ{
---         (d , ed , dˢᶜᵉ) -> d , (eq ∘ˢᵘᵇ⇓ ed) , dˢᶜᵉ
---       }
---     }
+  ⟦_⟧ˢᵘᵇ& : ∀ {Γ Δ Θ} {ρ : ⟦ Δ ↦ Θ ⟧} -> (ψ : Γ ↦ Δ) -> SCE ρ ->
+    ∃ λ (ρˢ : ⟦ Γ ↦ Θ ⟧) -> ⟦ ψ ⟧ˢᵘᵇ ρ ⇓ ρˢ × SCE ρˢ × emb⟦⟧ᵉⁿᵛ ρ ∘ˢᵘᵇ ψ ≈ˢ emb⟦⟧ᵉⁿᵛ ρˢ
+  ⟦ idˢᵘᵇ    ⟧ˢᵘᵇ& ρˢᶜᵉ = _ , idˢᵘᵇ⇓ , ρˢᶜᵉ , ≈ˢ-idʳ
+  ⟦_⟧ˢᵘᵇ& {ρ = ρ ▻ᵉⁿᵛ _} ↑ (ρˢᶜᵉ ▻ˢᶜᵉ xˢᶜᵛ) = ρ , ↑⇓ , ρˢᶜᵉ , ≈ˢ∘↑
+  ⟦ ψ ▻ˢᵘᵇ x ⟧ˢᵘᵇ& ρˢᶜᵉ =
+    case ⟦ ψ ⟧ˢᵘᵇ& ρˢᶜᵉ , ⟦ x ⟧& ρˢᶜᵉ of λ{
+      ((q , eq , qˢᶜᵉ , eq₁) , (xˢ , ex , xˢᶜᵛ , eq₂)) ->
+        (q ▻ᵉⁿᵛ xˢ) , (eq ▻ˢᵘᵇ⇓ ex) , (qˢᶜᵉ ▻ˢᶜᵉ xˢᶜᵛ)
+          , ≈ˢ-trans ≈ˢ∘▻ (≈ˢ▻-cong eq₂ eq₁)
+    }
+  ⟦ φ ∘ˢᵘᵇ ψ ⟧ˢᵘᵇ& ρˢᶜᵉ =
+    case ⟦ φ ⟧ˢᵘᵇ& ρˢᶜᵉ of λ{
+      (q , eq , qˢᶜᵉ , eq₁) -> case ⟦ ψ ⟧ˢᵘᵇ& qˢᶜᵉ of λ{
+        (d , ed , dˢᶜᵉ , eq₂) -> d , (eq ∘ˢᵘᵇ⇓ ed) , dˢᶜᵉ
+          , ≈ˢ-trans (≈ˢ-trans (≈ˢ-sym ≈ˢ-assoc) (≈ˢ∘-cong eq₁ ≈ˢ-refl)) eq₂
+      }
+    }
 
--- ∃-Norm : ∀ {Γ σ} -> (x : Γ ⊢ σ) -> ∃ λ xʳ -> Norm x ⇓ xʳ 
--- ∃-Norm x =
---   case ⟦ x ⟧& idˢᶜᵉ of λ{
---     (xˢʳ , ex , xˢᶜᵛ) -> case quoteˢᶜᵛ xˢᶜᵛ of λ{
---       (xʳ , qx) -> xʳ , norm⇓ ex qx
---     }
---   }
+∃-Norm : ∀ {Γ σ} -> (x : Γ ⊢ σ) -> ∃ λ xʳ -> Norm x ⇓ xʳ × x ≈ embⁿᶠ xʳ
+∃-Norm x =
+  case ⟦ x ⟧& idˢᶜᵉ of λ{
+    (xˢʳ , ex , xˢᶜᵛ , eq₁) -> case quoteˢᶜᵛ xˢᶜᵛ of λ{
+      (xʳ , qx , eq₂) -> xʳ , norm⇓ ex qx
+        , ≈-trans (≈-trans (subst (λ s -> _ ≈ _ [ s ]) emb⟦⟧ᵉⁿᵛ-idᵉⁿᵛ ≈-id) eq₁) eq₂
+    }
+  }
