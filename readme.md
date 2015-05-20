@@ -1,1 +1,1 @@
-It's a unicode-obsessive **clone** of [this](https://github.com/jmchapman/Big-step-Normalisation/tree/master/LambdaCalculus/BasicSystem) development.
+It's a unicode-obsessive clone (some things differ, especially the convertibility proofs, but the encoding is the same) of [this](https://github.com/jmchapman/Big-step-Normalisation/tree/master/LambdaCalculus/BasicSystem) development.
