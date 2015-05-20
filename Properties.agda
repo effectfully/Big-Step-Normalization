@@ -1,7 +1,8 @@
-open import Relation.Binary.PropositionalEquality
+open import Relation.Binary.PropositionalEquality hiding ([_])
 open import Data.Product
 
 open import Basic
+open import Convertibility
 
 ∘idᵒᵖᵉ : ∀ {Γ Δ} {ι : Γ ⊆ Δ} -> ι ∘ᵒᵖᵉ idᵒᵖᵉ ≡ ι
 ∘idᵒᵖᵉ {ι = stop}   = refl
@@ -53,3 +54,10 @@ mutual
                -> wk⟦⟧ᵉⁿᵛ (κ ∘ᵒᵖᵉ ι) ρ ≡ wk⟦⟧ᵉⁿᵛ κ (wk⟦⟧ᵉⁿᵛ ι ρ)
   wk⟦⟧ᵉⁿᵛ-∘ᵒᵖᵉ {ρ = εᵉⁿᵛ     } = refl
   wk⟦⟧ᵉⁿᵛ-∘ᵒᵖᵉ {ρ = ρ ▻ᵉⁿᵛ xˢ} = cong₂ _▻ᵉⁿᵛ_ wk⟦⟧ᵉⁿᵛ-∘ᵒᵖᵉ wk⟦⟧ⁿᶠ-∘ᵒᵖᵉ
+
+postulate
+  ≈-emb⟦⟧ⁿᵉ-wkⁿᵉ : ∀ {Γ Δ σ} {ι : Γ ⊆ Δ} (xˢ : ⟦ Γ ⊢ⁿᵉ σ ⟧) (x : Γ ⊢ⁿᵉ σ)
+                 -> emb⟦⟧ⁿᵉ xˢ ≈ embⁿᵉ x
+                 -> emb⟦⟧ⁿᵉ (wk⟦⟧ⁿᵉ ι xˢ) ≈ embⁿᵉ (wkⁿᵉ ι x)
+  ≈-emb⟦⟧ⁿᶠ-embᵒᵖᵉ : ∀ {Γ Δ σ} {ι : Γ ⊆ Δ} (xˢ : ⟦ Γ ⊢ⁿᶠ σ ⟧)
+                   -> emb⟦⟧ⁿᶠ xˢ [ embᵒᵖᵉ ι ] ≈ emb⟦⟧ⁿᶠ (wk⟦⟧ⁿᶠ ι xˢ)
