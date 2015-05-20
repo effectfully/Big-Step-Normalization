@@ -17,4 +17,4 @@ postulate
   Embⁿᶠ : ∀ {Γ σ} -> (x : Γ ⊢ⁿᶠ σ) -> Norm embⁿᶠ x ⇓ x
 
 stability : ∀ {Γ σ} -> (x : Γ ⊢ⁿᶠ σ) -> nf (embⁿᶠ x) ≡ x
-stability x = unique (proj₂ (∃-Norm (embⁿᶠ x))) (Embⁿᶠ x)
+stability x = unique (proj₁ (proj₂ (∃-Norm (embⁿᶠ x)))) (Embⁿᶠ x)

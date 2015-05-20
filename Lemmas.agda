@@ -77,7 +77,7 @@ mutual
                                  (≈-refl {x = emb⟦⟧ⁿᶠ fˢ}))
                                  (≈-sym (≈-emb⟦⟧ⁿᶠ-embᵒᵖᵉ fˢ)))
                           ≈ˢ-refl)
-                      (≈-sym ≈[]∘))
+                      ≈[]∘)
                     (≈-emb⟦⟧ⁿᶠ-embᵒᵖᵉ fˢ))
                   ≈-refl)
                 (≈-trans fˢ∙ø≈bˢʳ bˢ̂ʳ≈b)))
@@ -122,7 +122,7 @@ mutual
     case ⟦ ψ ⟧ˢᵘᵇ& ρˢᶜᵉ of λ{
       (q , eq , qˢᶜᵉ , eq₁) -> case ⟦ x ⟧& qˢᶜᵉ of λ{
         (xˢ , ex , xˢᶜᵛ , eq₂) -> xˢ , (ex [ eq ]⇓) , xˢᶜᵛ
-          , ≈-trans (≈-trans (≈-sym ≈[]∘) (≈[]-cong ≈-refl eq₁)) eq₂
+          , ≈-trans (≈-trans ≈[]∘ (≈[]-cong ≈-refl eq₁)) eq₂
       }
     }
 
@@ -134,13 +134,13 @@ mutual
     case ⟦ ψ ⟧ˢᵘᵇ& ρˢᶜᵉ , ⟦ x ⟧& ρˢᶜᵉ of λ{
       ((q , eq , qˢᶜᵉ , eq₁) , (xˢ , ex , xˢᶜᵛ , eq₂)) ->
         (q ▻ᵉⁿᵛ xˢ) , (eq ▻ˢᵘᵇ⇓ ex) , (qˢᶜᵉ ▻ˢᶜᵉ xˢᶜᵛ)
-          , ≈ˢ-trans ≈ˢ∘▻ (≈ˢ▻-cong eq₂ eq₁)
+          , ≈ˢ-trans ≈ˢ∘▻ (≈ˢ▻-cong eq₁ eq₂)
     }
   ⟦ φ ∘ˢᵘᵇ ψ ⟧ˢᵘᵇ& ρˢᶜᵉ =
     case ⟦ φ ⟧ˢᵘᵇ& ρˢᶜᵉ of λ{
       (q , eq , qˢᶜᵉ , eq₁) -> case ⟦ ψ ⟧ˢᵘᵇ& qˢᶜᵉ of λ{
         (d , ed , dˢᶜᵉ , eq₂) -> d , (eq ∘ˢᵘᵇ⇓ ed) , dˢᶜᵉ
-          , ≈ˢ-trans (≈ˢ-trans (≈ˢ-sym ≈ˢ-assoc) (≈ˢ∘-cong eq₁ ≈ˢ-refl)) eq₂
+          , ≈ˢ-trans (≈ˢ-trans ≈ˢ-assoc (≈ˢ∘-cong eq₁ ≈ˢ-refl)) eq₂
       }
     }
 
@@ -149,6 +149,6 @@ mutual
   case ⟦ x ⟧& idˢᶜᵉ of λ{
     (xˢʳ , ex , xˢᶜᵛ , eq₁) -> case quoteˢᶜᵛ xˢᶜᵛ of λ{
       (xʳ , qx , eq₂) -> xʳ , norm⇓ ex qx
-        , ≈-trans (≈-trans (subst (λ s -> _ ≈ _ [ s ]) emb⟦⟧ᵉⁿᵛ-idᵉⁿᵛ ≈-id) eq₁) eq₂
+        , ≈-trans (≈-trans (≈-trans ≈-id (≈[]-cong ≈-refl emb⟦⟧ᵉⁿᵛ-idᵉⁿᵛ)) eq₁) eq₂
     }
   }
